@@ -16,9 +16,9 @@ import me.cychen.util.Umath;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+//
+//import org.apache.logging.log4j.LogManager;
+//import org.apache.logging.log4j.Logger;
 
 /**
  * Created by cy on 3/28/2017.
@@ -29,80 +29,77 @@ public class MainSingleTaskSetTest {
 	private static final int VICTIM_PRI = 2;
 	private static final int OBSERVER_PRI = 1;
 
-	private static final Logger loggerConsole = LogManager.getLogger("console");
-	private static final Logger loggerExp2 = LogManager.getLogger("exp2");
+//	private static final Logger loggerConsole = LogManager.getLogger("console");
+//	private static final Logger loggerExp2 = LogManager.getLogger("exp2");
 
 	public static void main(String[] args) throws IOException {
 
-		int[] alreadyDone = { 10, 15, 20, 30 };
+        if(!(args.length == 2 || args.length == 4)){
+            throw new IllegalArgumentException("\nprovided args of length: "+ args.length +"\nargs must be of length of 2 or 4"
+            + "\narg[0] = taskset size\narg[1] = number of reps\narg[2](optional) "
+            + "= utility upper limit\narg[3](optional) = utility lower limit");
+        }
+        int taskSetSize = Integer.parseInt(args[0]);
+        int totalReps = Integer.parseInt(args[1]);
 
-		for (int taskSetSize = 2; taskSetSize < 30; taskSetSize++) {
 
-			boolean done = false;
-			for (int a : alreadyDone) {
-				if (taskSetSize == a) {
-					done = true;
-					break;
-				}
-			}
-			if (done) {
-				continue;
-			}
+        float util_lower =-1;
+        float util_upper =-1;
+        if (args.length == 4){
+            util_upper = Float.parseFloat(args[2]);
+            util_lower = Float.parseFloat(args[3]);
+        }
 
-			for (int reps = 0; reps < 5; reps++) {
-				String fileName = "size"+taskSetSize+"rep"+reps+"_meta.txt";
 
-				try (BufferedWriter br = new BufferedWriter(new FileWriter(fileName))) {
+        for (int reps = 0; reps < totalReps; reps++) {
+            String fileName = "size"+taskSetSize+"rep"+reps+"_meta.txt";
 
-					loggerConsole.info("Test starts.");
+            try (BufferedWriter br = new BufferedWriter(new FileWriter(fileName))) {
 
-					// Generate a task set.
-					TaskSetGenerator taskSetGenerator = new TaskSetGenerator();
+//                loggerConsole.info("Test starts.");
 
-					// taskSetGenerator.setMaxPeriod(800);
-					// taskSetGenerator.setMinPeriod(50);
+                // Generate a task set.
+                TaskSetGenerator taskSetGenerator = new TaskSetGenerator();
 
-					// taskSetGenerator.setMaxExecTime(50);
-					// taskSetGenerator.setMinExecTime(5);
+                // taskSetGenerator.setMaxPeriod(800);
+                // taskSetGenerator.setMinPeriod(50);
 
-					taskSetGenerator.setMaxUtil(0.6);
-					taskSetGenerator.setMinUtil(0.5);
+                // taskSetGenerator.setMaxExecTime(50);
+                // taskSetGenerator.setMinExecTime(5);
 
-					taskSetGenerator.setNonHarmonicOnly(true);
+                taskSetGenerator.setMaxUtil(util_upper);
+                taskSetGenerator.setMinUtil(util_lower);
 
-					// taskSetGenerator.setMaxHyperPeriod(70070);
-					// taskSetGenerator.setGenerateFromHpDivisors(true);
+                taskSetGenerator.setNonHarmonicOnly(true);
 
-					/* Optimal attack condition experiment. */
-					taskSetGenerator.setNeedGenObserverTask(true);
-					taskSetGenerator.setObserverTaskPriority(OBSERVER_PRI);
-					taskSetGenerator.setVictimTaskPriority(VICTIM_PRI);
+                // taskSetGenerator.setMaxHyperPeriod(70070);
+                // taskSetGenerator.setGenerateFromHpDivisors(true);
 
-					taskSetGenerator.setMaxObservationRatio(999);
-					taskSetGenerator.setMinObservationRatio(1);
+                /* Optimal attack condition experiment. */
+                taskSetGenerator.setNeedGenObserverTask(true);
+                taskSetGenerator.setObserverTaskPriority(OBSERVER_PRI);
+                taskSetGenerator.setVictimTaskPriority(VICTIM_PRI);
 
-					TaskSetContainer taskSets = taskSetGenerator.generate(taskSetSize, 1);
+                taskSetGenerator.setMaxObservationRatio(999);
+                taskSetGenerator.setMinObservationRatio(1);
 
-					TaskSet taskSet = taskSets.getTaskSets().get(0);
+                TaskSetContainer taskSets = taskSetGenerator.generate(taskSetSize, 1);
 
-					// victim and observer task
-					Task victimTask = taskSet.getOneTaskByPriority(VICTIM_PRI);
-					Task observerTask = taskSet.getOneTaskByPriority(OBSERVER_PRI);
+                TaskSet taskSet = taskSets.getTaskSets().get(0);
 
-					double gcd = Umath.gcd(victimTask.getPeriod(), observerTask.getPeriod());
-					double lcm = Umath.lcm(victimTask.getPeriod(), observerTask.getPeriod());
-					double observationRatio = observerTask.getExecTime() / gcd;
-					
-					br.write(taskSet.toString());
-					// loggerConsole.info(taskSet.toString());
-					long taskSetHyperPeriod = taskSet.calHyperPeriod();
-					loggerConsole.info("Task Hyper-period: " + taskSetHyperPeriod);
-					
-				
-				}
-			}
+                // victim and observer task
+                Task victimTask = taskSet.getOneTaskByPriority(VICTIM_PRI);
+                Task observerTask = taskSet.getOneTaskByPriority(OBSERVER_PRI);
 
-		}
-
+                double gcd = Umath.gcd(victimTask.getPeriod(), observerTask.getPeriod());
+                double lcm = Umath.lcm(victimTask.getPeriod(), observerTask.getPeriod());
+                double observationRatio = observerTask.getExecTime() / gcd;
+                
+                br.write(taskSet.toString());
+                // loggerConsole.info(taskSet.toString());
+                long taskSetHyperPeriod = taskSet.calHyperPeriod();
+//                loggerConsole.info("Task Hyper-period: " + taskSetHyperPeriod);
+            }
+        }
 	}
 }
